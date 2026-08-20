@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Rutes Muntanya</string>
+    <string name="btn_load">Carrega GPX</string>
+    <string name="btn_download">Baixa mapes</string>
+    <string name="btn_center">Centra\'m</string>
+    <string name="layer_satellite">Satèl·lit</string>
+    <string name="layer_topo">Topogràfic</string>
+</resources>

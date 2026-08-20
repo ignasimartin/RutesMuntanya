@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RutesMuntanya" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>Exemple - pujada curta</name>
+    <trkseg>
+      <trkpt lat="42.5766" lon="1.6014"><ele>1850</ele></trkpt>
+      <trkpt lat="42.5779" lon="1.6041"><ele>1902</ele></trkpt>
+      <trkpt lat="42.5791" lon="1.6068"><ele>1975</ele></trkpt>
+      <trkpt lat="42.5808" lon="1.6090"><ele>2054</ele></trkpt>
+      <trkpt lat="42.5825" lon="1.6112"><ele>2138</ele></trkpt>
+      <trkpt lat="42.5840" lon="1.6135"><ele>2210</ele></trkpt>
+      <trkpt lat="42.5851" lon="1.6162"><ele>2276</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>
