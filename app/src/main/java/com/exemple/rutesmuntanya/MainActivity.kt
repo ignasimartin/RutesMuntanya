@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Paint
+import android.graphics.drawable.BitmapDrawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -30,6 +31,7 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.util.MapTileIndex
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
@@ -49,6 +51,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var routeArrowsOverlay: RouteArrowsOverlay? = null
     private val gradientSegments = ArrayList<Polyline>()
     private var routeBoundingBox: BoundingBox? = null
+
+    // Perfil d'altitud i selecció de punts
+    private var routePoints: List<GeoPoint>? = null
+    private var routeHasElevation = false
+    private var selectionMarker: Marker? = null
 
     // Sensor d'orientació (brúixola)
     private var sensorManager: SensorManager? = null
@@ -113,6 +120,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as? SensorManager
         rotationSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
 
+        binding.elevationProfile.onPointSelected = { index -> onProfilePointSelected(index) }
+
         setupButtons()
         ensureLocationPermission()
     }
@@ -130,8 +139,47 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             )
         }
         binding.btnLayer.setOnClickListener { toggleLayer() }
+        binding.btnProfile.setOnClickListener { toggleProfile() }
         binding.btnDownload.setOnClickListener { confirmDownload() }
         binding.btnCenter.setOnClickListener { centerOnMe() }
+    }
+
+    // ---------------- Perfil d'altitud ----------------
+
+    private fun toggleProfile() {
+        if (!routeHasElevation) {
+            toast("Carrega una ruta amb dades d'altitud per veure'n el perfil.")
+            return
+        }
+        binding.elevationProfile.visibility =
+            if (binding.elevationProfile.visibility == TextView.VISIBLE) TextView.GONE
+            else TextView.VISIBLE
+    }
+
+    private fun onProfilePointSelected(index: Int) {
+        val pts = routePoints ?: return
+        if (index < 0 || index >= pts.size) return
+        val gp = pts[index]
+        val marker = selectionMarker ?: createSelectionMarker().also {
+            selectionMarker = it
+            map.overlays.add(it)
+        }
+        marker.position = gp
+        reAddTopOverlays()
+        map.controller.setCenter(gp)
+        map.invalidate()
+    }
+
+    private fun createSelectionMarker(): Marker {
+        val marker = Marker(map)
+        marker.icon = BitmapDrawable(
+            resources,
+            Graphics.selectionDot(resources.displayMetrics.density)
+        )
+        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+        marker.setInfoWindow(null)
+        marker.setOnMarkerClickListener { _, _ -> true } // sense finestreta emergent
+        return marker
     }
 
     // ---------------- Capes ----------------
@@ -267,10 +315,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         gradientSegments.clear()
         routeArrowsOverlay?.let { map.overlays.remove(it) }
         routeArrowsOverlay = null
+        selectionMarker?.let { map.overlays.remove(it) }
+        selectionMarker = null
 
         val pts = result.points
         val eles = result.elevations
         val n = pts.size
+        routePoints = pts
 
         // --- Track amb gradient de color segons pendent ---
         val maxSegments = 600
@@ -305,6 +356,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         // El punt i la fletxa d'ubicació sempre a dalt de tot.
         reAddTopOverlays()
+
+        // --- Perfil d'altitud ---
+        routeHasElevation = eles.any { !it.isNaN() }
+        if (routeHasElevation) {
+            binding.elevationProfile.setData(pts, eles)
+        } else {
+            binding.elevationProfile.visibility = android.view.View.GONE
+        }
+        binding.elevationProfile.clearSelection()
 
         val bb = BoundingBox.fromGeoPoints(pts)
         routeBoundingBox = bb
