@@ -60,16 +60,30 @@ object Graphics {
 
     /**
      * Color segons el pendent (grade = desnivell / distància).
-     * Vermell = baixada forta, groc = pla, verd = pujada forta.
+     * Verd = baixada forta, groc = pla, vermell = pujada forta.
      */
     fun slopeColor(grade: Double): Int {
         val maxGrade = 0.20 // ±20 %
         val g = grade.coerceIn(-maxGrade, maxGrade)
-        val t = ((g + maxGrade) / (2 * maxGrade)).toFloat() // 0 = vermell, 1 = verd
-        val hue = t * 120f // 0 = vermell, 60 = groc, 120 = verd
+        val t = ((g + maxGrade) / (2 * maxGrade)).toFloat() // 0 = baixada forta, 1 = pujada forta
+        val hue = (1f - t) * 120f // baixada -> verd (120), pla -> groc (60), pujada -> vermell (0)
         val saturation = 0.85f
-        val value = 0.80f + 0.15f * t // el verd surt una mica més clar
+        val value = 0.80f + 0.15f * (1f - t) // el verd (baixada) surt una mica més clar
         return Color.HSVToColor(floatArrayOf(hue, saturation, value.coerceIn(0f, 1f)))
+    }
+
+    /** Punt taronja per marcar el punt seleccionat des del perfil d'altitud. */
+    fun selectionDot(density: Float): Bitmap {
+        val size = (18 * density).toInt().coerceAtLeast(18)
+        val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val c = Canvas(bmp)
+        val cx = size / 2f
+        val p = Paint(Paint.ANTI_ALIAS_FLAG)
+        p.color = Color.WHITE
+        c.drawCircle(cx, cx, size * 0.46f, p)
+        p.color = Color.parseColor("#FF6D00")
+        c.drawCircle(cx, cx, size * 0.32f, p)
+        return bmp
     }
 
     /** Color per a trams sense dades d'altitud. */

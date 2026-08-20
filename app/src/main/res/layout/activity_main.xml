@@ -50,6 +50,16 @@
             android:visibility="gone" />
     </LinearLayout>
 
+    <com.exemple.rutesmuntanya.ElevationProfileView
+        android:id="@+id/elevationProfile"
+        android:layout_width="0dp"
+        android:layout_height="150dp"
+        android:background="#CC000000"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/buttonBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <LinearLayout
         android:id="@+id/buttonBar"
         android:layout_width="0dp"
@@ -82,6 +92,17 @@
             android:textSize="11sp"
             android:padding="4dp"
             android:text="@string/layer_satellite" />
+
+        <Button
+            android:id="@+id/btnProfile"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:padding="4dp"
+            android:text="@string/btn_profile" />
 
         <Button
             android:id="@+id/btnDownload"
