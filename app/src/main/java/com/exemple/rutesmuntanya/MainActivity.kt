@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
+import android.location.Location
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -34,6 +35,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -56,6 +58,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var routePoints: List<GeoPoint>? = null
     private var routeHasElevation = false
     private var selectionMarker: Marker? = null
+
+    // Navegació / seguiment de la ruta
+    private var guidance: RouteGuidance? = null
+    private var navigating = false
+    private var navOrientation = 0f
 
     // Sensor d'orientació (brúixola)
     private var sensorManager: SensorManager? = null
@@ -142,6 +149,74 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         binding.btnProfile.setOnClickListener { toggleProfile() }
         binding.btnDownload.setOnClickListener { confirmDownload() }
         binding.btnCenter.setOnClickListener { centerOnMe() }
+        binding.btnNavigate.setOnClickListener { toggleNavigation() }
+    }
+
+    // ---------------- Navegació / seguiment ----------------
+
+    private fun toggleNavigation() {
+        if (navigating) stopNavigation() else startNavigation()
+    }
+
+    private fun startNavigation() {
+        if (guidance == null) {
+            toast("Primer carrega una ruta GPX.")
+            return
+        }
+        val loc = myLocationOverlay?.myLocation
+        if (loc == null) {
+            toast("Encara no tinc la teva ubicació. Comprova que el GPS està activat.")
+            return
+        }
+        navigating = true
+        binding.btnNavigate.text = getString(R.string.btn_navigate_stop)
+        binding.txtGuidance.visibility = TextView.VISIBLE
+        binding.txtGuidance.text = "Seguint la ruta…"
+        headingArrowOverlay?.visible = false
+        map.controller.setZoom(17.0)
+        map.controller.setCenter(loc)
+        guidance?.let { renderGuidance(it.update(loc)) }
+        map.invalidate()
+    }
+
+    private fun stopNavigation() {
+        navigating = false
+        binding.btnNavigate.text = getString(R.string.btn_navigate)
+        binding.txtGuidance.visibility = TextView.GONE
+        headingArrowOverlay?.visible = true
+        navOrientation = 0f
+        map.mapOrientation = 0f
+        map.invalidate()
+    }
+
+    /** Cada nova posició del GPS: segueix, gira i actualitza la indicació. */
+    private fun onNewLocation(location: Location) {
+        if (!navigating) return
+        val me = GeoPoint(location.latitude, location.longitude)
+        map.controller.setCenter(me)
+        // Gira el mapa segons el rumb del GPS quan ens movem (nord deixa d'estar amunt).
+        if (location.hasBearing() && location.speed > 0.7f) {
+            val target = -location.bearing
+            val diff = ((target - navOrientation + 540f) % 360f) - 180f
+            navOrientation = (navOrientation + 0.25f * diff + 360f) % 360f
+            map.mapOrientation = navOrientation
+        }
+        guidance?.let { renderGuidance(it.update(me)) }
+    }
+
+    private fun renderGuidance(state: RouteGuidance.State) {
+        binding.txtGuidance.text = when (state.kind) {
+            RouteGuidance.Kind.OFF_ROUTE -> "⚠  Fora de ruta"
+            RouteGuidance.Kind.ARRIVE -> "🏁  Has arribat al final"
+            RouteGuidance.Kind.STRAIGHT -> "↑  Continua recte" + distSuffix(state.distanceToTurnMeters)
+            RouteGuidance.Kind.LEFT -> "↰  Gira a l'esquerra" + distSuffix(state.distanceToTurnMeters)
+            RouteGuidance.Kind.RIGHT -> "↱  Gira a la dreta" + distSuffix(state.distanceToTurnMeters)
+        }
+    }
+
+    private fun distSuffix(meters: Double): String {
+        if (meters.isNaN() || meters <= 0) return ""
+        return if (meters < 10) "  ·  ara" else "  ·  ${Math.round(meters / 10.0) * 10} m"
     }
 
     // ---------------- Perfil d'altitud ----------------
@@ -226,7 +301,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val density = resources.displayMetrics.density
         val dot = Graphics.blueDot(density)
 
-        val overlay = MyLocationNewOverlay(GpsMyLocationProvider(this), map)
+        val overlay = NavLocationOverlay(GpsMyLocationProvider(this))
         // Punt blau tant aturat com en moviment (sense figura humana).
         overlay.setPersonIcon(dot)
         overlay.setDirectionIcon(dot)
@@ -244,6 +319,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         headingArrowOverlay = arrowOverlay
 
         map.invalidate()
+    }
+
+    /** Overlay d'ubicació que, a més del punt blau, alimenta la navegació. */
+    private inner class NavLocationOverlay(provider: GpsMyLocationProvider) :
+        MyLocationNewOverlay(provider, map) {
+        override fun onLocationChanged(location: Location?, source: IMyLocationProvider?) {
+            super.onLocationChanged(location, source)
+            val loc = location ?: return
+            runOnUiThread { onNewLocation(loc) }
+        }
     }
 
     private fun centerOnMe() {
@@ -322,6 +407,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val eles = result.elevations
         val n = pts.size
         routePoints = pts
+        guidance = if (pts.size >= 2) RouteGuidance(pts) else null
 
         // --- Track amb gradient de color segons pendent ---
         val maxSegments = 600
