@@ -19,9 +19,13 @@ class HeadingArrowOverlay(
     /** Graus respecte al nord (sentit horari). */
     var headingDeg: Float = 0f
 
+    /** Si és false, la fletxa no es dibuixa (p. ex. en mode navegació). */
+    var visible: Boolean = true
+
     private val screenPoint = Point()
 
     override fun draw(canvas: Canvas, projection: Projection) {
+        if (!visible) return
         val loc = locationProvider() ?: return
         projection.toPixels(loc, screenPoint)
         val x = screenPoint.x.toFloat()

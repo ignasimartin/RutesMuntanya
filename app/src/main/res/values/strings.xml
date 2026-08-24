@@ -5,6 +5,8 @@
     <string name="btn_download">Baixa mapes</string>
     <string name="btn_center">Centra\'m</string>
     <string name="btn_profile">Perfil</string>
+    <string name="btn_navigate">Navega</string>
+    <string name="btn_navigate_stop">Atura</string>
     <string name="layer_satellite">Satèl·lit</string>
     <string name="layer_topo">Topogràfic</string>
 </resources>
