@@ -504,7 +504,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     /** Tria índexs per posar una fletxa cada ~120 m, amb un màxim raonable. */
     private fun pickArrowIndices(pts: List<GeoPoint>): List<Int> {
-        val intervalMeters = 120.0
+        val intervalMeters = 180.0
         val maxArrows = 500
         val indices = ArrayList<Int>()
         var accumulated = 0.0

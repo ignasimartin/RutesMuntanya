@@ -23,7 +23,7 @@ class RouteArrowsOverlay(
     private val pA = Point()
     private val pB = Point()
     private val path = Path()
-    private val size = density * 7f
+    private val size = density * 5f
 
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
