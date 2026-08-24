@@ -13,148 +13,257 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <TextView
-        android:id="@+id/txtGuidance"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="#E01B5E20"
+    <!-- Botó carregar GPX (dalt esquerra) -->
+    <ImageButton
+        android:id="@+id/btnLoad"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_margin="14dp"
         android:padding="14dp"
-        android:textColor="#FFFFFF"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:visibility="gone"
+        android:background="@drawable/bg_fab"
+        android:elevation="6dp"
+        android:src="@drawable/ic_folder"
+        android:scaleType="fitCenter"
+        android:contentDescription="Carrega GPX"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintStart_toStartOf="parent" />
 
+    <!-- Píndola amb el nom de la ruta -->
     <LinearLayout
-        android:id="@+id/topPanel"
+        android:id="@+id/cardRouteName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_margin="10dp"
-        app:layout_constraintTop_toBottomOf="@+id/txtGuidance"
-        app:layout_constraintStart_toStartOf="parent"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_pill"
+        android:elevation="6dp"
+        android:padding="10dp"
+        android:layout_marginEnd="14dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@+id/btnLoad"
+        app:layout_constraintBottom_toBottomOf="@+id/btnLoad"
+        app:layout_constraintStart_toEndOf="@+id/btnLoad"
         app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/ic_pin"
+            android:contentDescription="@null" />
 
         <TextView
             android:id="@+id/txtRouteName"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="#CC000000"
-            android:padding="10dp"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:layout_weight="1"
+            android:textColor="@color/ink"
+            android:textSize="15sp"
             android:textStyle="bold"
-            android:gravity="center"
-            android:maxLines="2"
-            android:ellipsize="end"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/txtStats"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:background="#DDFFFFFF"
-            android:padding="10dp"
-            android:textColor="#212121"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
+            android:maxLines="1"
+            android:ellipsize="end" />
     </LinearLayout>
 
+    <!-- Rètol de gir (mode seguiment) -->
+    <LinearLayout
+        android:id="@+id/navBanner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_banner_green"
+        android:elevation="8dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="16dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/imgTurn"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="14dp"
+            android:padding="11dp"
+            android:background="@drawable/bg_turnicon"
+            android:src="@drawable/ic_nav_straight"
+            android:scaleType="fitCenter"
+            android:contentDescription="@null" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtDist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-condensed"
+                android:textColor="@color/white"
+                android:textSize="36sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false"
+                android:text="" />
+
+            <TextView
+                android:id="@+id/txtManeuver"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:text="" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Columna de botons flotants (dreta) -->
+    <LinearLayout
+        android:id="@+id/fabColumn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginEnd="14dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottomCard"
+        android:layout_marginBottom="14dp">
+
+        <ImageButton
+            android:id="@+id/btnLayer"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginBottom="12dp"
+            android:padding="12dp"
+            android:background="@drawable/bg_fab"
+            android:elevation="6dp"
+            android:src="@drawable/ic_layers"
+            android:scaleType="fitCenter"
+            android:contentDescription="Capes" />
+
+        <ImageButton
+            android:id="@+id/btnDownload"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginBottom="12dp"
+            android:padding="12dp"
+            android:background="@drawable/bg_fab"
+            android:elevation="6dp"
+            android:src="@drawable/ic_download"
+            android:scaleType="fitCenter"
+            android:contentDescription="Baixa mapes" />
+
+        <ImageButton
+            android:id="@+id/btnCenter"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:background="@drawable/bg_fab"
+            android:elevation="6dp"
+            android:src="@drawable/ic_center"
+            android:scaleType="fitCenter"
+            android:contentDescription="Centra'm" />
+    </LinearLayout>
+
+    <!-- Perfil d'altitud -->
     <com.exemple.rutesmuntanya.ElevationProfileView
         android:id="@+id/elevationProfile"
         android:layout_width="0dp"
         android:layout_height="150dp"
         android:background="#CC000000"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/buttonBar"
+        app:layout_constraintBottom_toTopOf="@+id/bottomCard"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <Button
-        android:id="@+id/btnNavigate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="12dp"
-        android:layout_marginBottom="12dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:background="#2E7D32"
-        android:textColor="#FFFFFF"
-        android:textStyle="bold"
-        android:text="@string/btn_navigate"
-        app:layout_constraintBottom_toTopOf="@+id/buttonBar"
-        app:layout_constraintEnd_toEndOf="parent" />
-
+    <!-- Full inferior (estadístiques + acció) -->
     <LinearLayout
-        android:id="@+id/buttonBar"
+        android:id="@+id/bottomCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="#000000"
-        android:padding="4dp"
+        android:orientation="vertical"
+        android:background="@drawable/bg_bottomcard"
+        android:elevation="12dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="16dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <Button
-            android:id="@+id/btnLoad"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="#FFFFFF"
-            android:textSize="11sp"
-            android:padding="4dp"
-            android:text="@string/btn_load" />
+        <View
+            android:layout_width="44dp"
+            android:layout_height="5dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="12dp"
+            android:background="@color/line" />
 
-        <Button
-            android:id="@+id/btnLayer"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:id="@+id/statsRow"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="#FFFFFF"
-            android:textSize="11sp"
-            android:padding="4dp"
-            android:text="@string/layer_satellite" />
+            android:orientation="horizontal"
+            android:layout_marginBottom="14dp">
 
-        <Button
-            android:id="@+id/btnProfile"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="#FFFFFF"
-            android:textSize="11sp"
-            android:padding="4dp"
-            android:text="@string/btn_profile" />
+            <LinearLayout style="@style/StatTile">
+                <TextView android:id="@+id/txtStatDist" style="@style/StatValue" android:text="—" />
+                <TextView style="@style/StatLabel" android:text="Distància" />
+            </LinearLayout>
 
-        <Button
-            android:id="@+id/btnDownload"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="#FFFFFF"
-            android:textSize="11sp"
-            android:padding="4dp"
-            android:text="@string/btn_download" />
+            <LinearLayout style="@style/StatTile">
+                <TextView android:id="@+id/txtStatUp" style="@style/StatValue" android:textColor="@color/green" android:text="—" />
+                <TextView style="@style/StatLabel" android:text="Pujada" />
+            </LinearLayout>
 
-        <Button
-            android:id="@+id/btnCenter"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="0dp"
+            <LinearLayout style="@style/StatTile">
+                <TextView android:id="@+id/txtStatDown" style="@style/StatValue" android:textColor="@color/coral" android:text="—" />
+                <TextView style="@style/StatLabel" android:text="Baixada" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/StatTile">
+                <TextView android:id="@+id/txtStatTop" style="@style/StatValue" android:text="—" />
+                <TextView style="@style/StatLabel" android:text="Cim" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="#FFFFFF"
-            android:textSize="11sp"
-            android:padding="4dp"
-            android:text="@string/btn_center" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <Button
+                android:id="@+id/btnProfile"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:textColor="@color/green"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:text="@string/btn_profile" />
+
+            <Button
+                android:id="@+id/btnNavigate"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_cta"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:drawableStart="@drawable/ic_play"
+                android:drawablePadding="6dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:text="@string/btn_navigate" />
+        </LinearLayout>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

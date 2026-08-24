@@ -3,6 +3,7 @@ package com.exemple.rutesmuntanya
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
 import android.location.Location
@@ -14,6 +15,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.provider.OpenableColumns
+import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -51,6 +53,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var myLocationOverlay: MyLocationNewOverlay? = null
     private var headingArrowOverlay: HeadingArrowOverlay? = null
     private var routeArrowsOverlay: RouteArrowsOverlay? = null
+    private var routeCasing: Polyline? = null
     private val gradientSegments = ArrayList<Polyline>()
     private var routeBoundingBox: BoundingBox? = null
 
@@ -170,8 +173,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
         navigating = true
         binding.btnNavigate.text = getString(R.string.btn_navigate_stop)
-        binding.txtGuidance.visibility = TextView.VISIBLE
-        binding.txtGuidance.text = "Seguint la ruta…"
+        binding.navBanner.visibility = View.VISIBLE
+        binding.cardRouteName.visibility = View.GONE
+        binding.statsRow.visibility = View.GONE
+        binding.btnProfile.visibility = View.GONE
         headingArrowOverlay?.visible = false
         map.controller.setZoom(17.0)
         map.controller.setCenter(loc)
@@ -182,7 +187,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun stopNavigation() {
         navigating = false
         binding.btnNavigate.text = getString(R.string.btn_navigate)
-        binding.txtGuidance.visibility = TextView.GONE
+        binding.navBanner.visibility = View.GONE
+        binding.statsRow.visibility = View.VISIBLE
+        binding.btnProfile.visibility = View.VISIBLE
+        if (routePoints != null) binding.cardRouteName.visibility = View.VISIBLE
         headingArrowOverlay?.visible = true
         navOrientation = 0f
         map.mapOrientation = 0f
@@ -205,18 +213,32 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun renderGuidance(state: RouteGuidance.State) {
-        binding.txtGuidance.text = when (state.kind) {
-            RouteGuidance.Kind.OFF_ROUTE -> "⚠  Fora de ruta"
-            RouteGuidance.Kind.ARRIVE -> "🏁  Has arribat al final"
-            RouteGuidance.Kind.STRAIGHT -> "↑  Continua recte" + distSuffix(state.distanceToTurnMeters)
-            RouteGuidance.Kind.LEFT -> "↰  Gira a l'esquerra" + distSuffix(state.distanceToTurnMeters)
-            RouteGuidance.Kind.RIGHT -> "↱  Gira a la dreta" + distSuffix(state.distanceToTurnMeters)
+        val icon: Int
+        val maneuver: String
+        when (state.kind) {
+            RouteGuidance.Kind.OFF_ROUTE -> { icon = R.drawable.ic_nav_warning; maneuver = "Fora de ruta" }
+            RouteGuidance.Kind.ARRIVE -> { icon = R.drawable.ic_nav_flag; maneuver = "Has arribat al final" }
+            RouteGuidance.Kind.STRAIGHT -> { icon = R.drawable.ic_nav_straight; maneuver = "Continua recte" }
+            RouteGuidance.Kind.LEFT -> { icon = R.drawable.ic_nav_left; maneuver = "Gira a l'esquerra" }
+            RouteGuidance.Kind.RIGHT -> { icon = R.drawable.ic_nav_right; maneuver = "Gira a la dreta" }
         }
+        binding.imgTurn.setImageResource(icon)
+        binding.txtManeuver.text = maneuver
+        binding.txtDist.text = when (state.kind) {
+            RouteGuidance.Kind.ARRIVE -> ""
+            RouteGuidance.Kind.OFF_ROUTE -> formatDistance(state.crossTrackMeters)
+            else -> formatDistance(state.distanceToTurnMeters)
+        }
+        binding.navBanner.setBackgroundResource(
+            if (state.kind == RouteGuidance.Kind.OFF_ROUTE) R.drawable.bg_banner_coral
+            else R.drawable.bg_banner_green
+        )
     }
 
-    private fun distSuffix(meters: Double): String {
+    private fun formatDistance(meters: Double): String {
         if (meters.isNaN() || meters <= 0) return ""
-        return if (meters < 10) "  ·  ara" else "  ·  ${Math.round(meters / 10.0) * 10} m"
+        return if (meters >= 1000) "%.1f km".format(meters / 1000.0)
+        else "${Math.round(meters / 10.0) * 10} m"
     }
 
     // ---------------- Perfil d'altitud ----------------
@@ -262,8 +284,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun toggleLayer() {
         usingSatellite = !usingSatellite
         map.setTileSource(if (usingSatellite) satelliteSource else topoSource)
-        binding.btnLayer.text = if (usingSatellite) getString(R.string.layer_topo)
-        else getString(R.string.layer_satellite)
+        toast(if (usingSatellite) "Capa: satèl·lit" else "Capa: topogràfic")
         map.invalidate()
     }
 
@@ -372,7 +393,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 }
                 val displayName = result.name ?: queryDisplayName(uri) ?: "Ruta"
                 binding.txtRouteName.text = displayName
-                binding.txtRouteName.visibility = TextView.VISIBLE
+                binding.cardRouteName.visibility = View.VISIBLE
 
                 drawRoute(result)
                 showStats(result)
@@ -400,6 +421,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         gradientSegments.clear()
         routeArrowsOverlay?.let { map.overlays.remove(it) }
         routeArrowsOverlay = null
+        routeCasing?.let { map.overlays.remove(it) }
+        routeCasing = null
         selectionMarker?.let { map.overlays.remove(it) }
         selectionMarker = null
 
@@ -408,6 +431,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val n = pts.size
         routePoints = pts
         guidance = if (pts.size >= 2) RouteGuidance(pts) else null
+
+        // Casing blanc sota la traça (estil senyalització)
+        val casing = Polyline(map)
+        casing.setPoints(pts)
+        casing.outlinePaint.color = Color.WHITE
+        casing.outlinePaint.strokeWidth = 18f
+        casing.outlinePaint.strokeCap = Paint.Cap.ROUND
+        map.overlays.add(casing)
+        routeCasing = casing
 
         // --- Track amb gradient de color segons pendent ---
         val maxSegments = 600
@@ -492,23 +524,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun showStats(result: GpxParser.GpxResult) {
-        val km = result.totalDistanceMeters / 1000.0
-        val sb = StringBuilder()
-        sb.append("Distància: %.2f km".format(km))
+        binding.bottomCard.visibility = View.VISIBLE
+        binding.txtStatDist.text = "%.1f km".format(result.totalDistanceMeters / 1000.0)
         if (!result.minElevation.isNaN() && !result.maxElevation.isNaN()) {
-            sb.append("   ·   ↑ %d m   ↓ %d m".format(
-                result.elevationGainMeters.roundToInt(),
-                result.elevationLossMeters.roundToInt()
-            ))
-            sb.append("\nAltitud: %d – %d m".format(
-                result.minElevation.roundToInt(),
-                result.maxElevation.roundToInt()
-            ))
+            binding.txtStatUp.text = "+%d".format(result.elevationGainMeters.roundToInt())
+            binding.txtStatDown.text = "−%d".format(result.elevationLossMeters.roundToInt())
+            binding.txtStatTop.text = "%d m".format(result.maxElevation.roundToInt())
         } else {
-            sb.append("\n(El GPX no inclou dades d'altitud)")
+            binding.txtStatUp.text = "—"
+            binding.txtStatDown.text = "—"
+            binding.txtStatTop.text = "—"
         }
-        binding.txtStats.text = sb.toString()
-        binding.txtStats.visibility = TextView.VISIBLE
     }
 
     // ---------------- Descàrrega offline ----------------
