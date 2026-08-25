@@ -16,6 +16,7 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import android.provider.OpenableColumns
 import android.view.View
+import android.view.WindowManager
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -172,6 +173,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             return
         }
         navigating = true
+        // Mantén la pantalla encesa mentre segueixes la ruta.
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         binding.btnNavigate.text = getString(R.string.btn_navigate_stop)
         binding.navBanner.visibility = View.VISIBLE
         binding.cardRouteName.visibility = View.GONE
@@ -186,6 +189,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun stopNavigation() {
         navigating = false
+        // Deixa que la pantalla es pugui tornar a apagar sola.
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         binding.btnNavigate.text = getString(R.string.btn_navigate)
         binding.navBanner.visibility = View.GONE
         binding.statsRow.visibility = View.VISIBLE
